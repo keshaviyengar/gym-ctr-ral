@@ -1,22 +1,27 @@
-import gym
-import numpy as np
+import gymnasium as gym
 from ctr_utils.obs_utils import *
 from ctr_utils.render_utils import Rendering
 from ctr_utils.goal_tolerance import GoalTolerance
-from ctr_kinematics.ctr_kinematics.ThreeTubeCTR import ThreeTubeCTRKinematics
+from ctr_kinematics.ThreeTubeCTR import ThreeTubeCTRKinematics
 
 
 class CtrReachEnv(gym.Env):
-    def __init__(self, ctr_parameters, goal_parameters, noise_parameters, initial_joints, max_extension_action,
-                 max_rotation_action, steps_per_episode, n_substeps):
+    metadata = {"render_modes": ["human"], "render_fps": 4}
+
+    def __init__(self, ctr_parameters, goal_parameters, reward_type, joint_representation, noise_parameters,
+                 initial_joints, max_extension_action, max_rotation_action, steps_per_episode, n_substeps, render_mode):
         # TODO: How to include multiple tube systems in observation for training
         # Tubes ordered outermost to innermost in environment but innermost to outermost in kinematics
         self.ctr_parameters = ctr_parameters
         self.tube_length = np.array(
-            [ctr_parameters['tube_0']['length'], ctr_parameters['tube_1']['length'], ctr_parameters['tube_2']['length']])
+            [ctr_parameters['outer']['length'], ctr_parameters['middle']['length'],
+             ctr_parameters['inner']['length']])
         self.num_tubes = len(self.ctr_parameters)
         assert self.num_tubes in [2, 3]
         self.goal_parameters = goal_parameters
+        self.reward_type = reward_type
+        assert joint_representation in ['proprioceptive', 'egocentric']
+        self.joint_representation = joint_representation
         self.noise_parameters = noise_parameters
         self.joints = initial_joints
         self.max_extension_action = max_extension_action
@@ -36,6 +41,7 @@ class CtrReachEnv(gym.Env):
         self.tolerance_min_max = np.array([self.goal_tolerance.final_tol, self.goal_tolerance.init_tol])
 
         self.kinematics = ThreeTubeCTRKinematics(ctr_parameters)
+        self.render_mode = render_mode
         self.visualization = None
         # Assume delta goal min and maxes for now
 
@@ -43,13 +49,13 @@ class CtrReachEnv(gym.Env):
         if seed is not None:
             np.random.seed(seed)
 
-    def reset(self):
+    def reset(self, seed=None, options=None):
         # TimeLimit wrapper to ensure end of episode is handled correctly
         self.desired_goal = self.kinematics.forward_kinematics(flip_joints(sample_joints(self.tube_length)))
-        self.joints = sample_joints(self.tube_length)
         self.achieved_goal = self.kinematics.forward_kinematics(flip_joints(self.joints))
-        return get_obs(self.joints, self.desired_goal, self.achieved_goal, self.goal_tolerance.current_tol,
-                       self.tolerance_min_max, self.tube_length)
+        obs = get_obs(self.joints, self.joint_representation, self.desired_goal, self.achieved_goal,
+                      self.goal_tolerance.current_tol, self.tolerance_min_max, self.tube_length)
+        return obs, {'achieved_goal': self.achieved_goal, 'desired_goal': self.desired_goal}
 
     def step(self, action):
         assert not np.all(np.isnan(action))
@@ -57,65 +63,51 @@ class CtrReachEnv(gym.Env):
         for i in range(self.n_substeps):
             self.joints = apply_action(action, self.max_extension_action, self.max_rotation_action, self.joints,
                                        self.tube_length)
-        achieved_goal = self.kinematics.forward_kinematics(flip_joints(action))
-        reward = self.compute_reward(achieved_goal, self.desired_goal, self.goal_tolerance.current_tol)
+        achieved_goal = self.kinematics.forward_kinematics(flip_joints(self.joints))
+        reward = self.compute_reward(achieved_goal, self.desired_goal, {'reward_type': self.reward_type})
         done = np.linalg.norm(achieved_goal - self.desired_goal, axis=-1) < self.goal_tolerance.current_tol
-        obs = get_obs(self.joints, self.desired_goal, achieved_goal, self.goal_tolerance.current_tol, self.tolerance_min_max,
+        obs = get_obs(self.joints, self.joint_representation,
+                      self.desired_goal, achieved_goal, self.goal_tolerance.current_tol, self.tolerance_min_max,
                       self.tube_length)
-        info = {}
-        return obs, reward, done, info
+        info = {'achieved_goal': achieved_goal, 'desired_goal': self.desired_goal}
+        return obs, reward, done, False, info
 
     @staticmethod
-    def compute_reward(achieved_goal, desired_goal, goal_tolerance):
+    def compute_distance(achieved_goal, desired_goal):
         assert achieved_goal.shape == desired_goal.shape
         d = np.linalg.norm(achieved_goal - desired_goal, axis=-1)
-        return -float((d > goal_tolerance))
+        return d
 
-    def render(self, mode='human'):
-        if mode == 'live':
+    def compute_reward(self, achieved_goal, desired_goal, info):
+        dist = self.compute_distance(achieved_goal, desired_goal)
+        if info['reward_type'] == 'dense':
+            reward = -1.0 * dist
+        else:
+            reward = -1.0 * (dist > self.goal_tolerance.current_tol)
+        return reward
+
+    def render(self):
+        if self.render_mode == 'human':
             if self.visualization is None:
                 self.visualization = Rendering()
             self.visualization.render(self.achieved_goal, self.desired_goal, self.kinematics.r1, self.kinematics.r2,
                                       self.kinematics.r3)
 
     def close(self):
-        if self.visualization != None:
+        if self.visualization is not None:
             self.visualization.close()
             self.visualization = None
 
 
 if __name__ == '__main__':
-    ctr_parameters = {
-        'tube_0':
-            {'length': 110.0e-3, 'length_curved': 100e-3, 'diameter_inner': 1.2e-3, 'diameter_outer': 1.5e-3,
-             'stiffness': 50e+10, 'torsional_stiffness': 50.0e+10 / (2 * (1 + 0.3)),
-             'x_curvature': 4.37, 'y_curvature': 0},
-        'tube_1':
-            {'length': 165.0e-3, 'length_curved': 100e-3, 'diameter_inner': 0.7e-3, 'diameter_outer': 0.9e-3,
-             'stiffness': 50e+10, 'torsional_stiffness': 50.0e+10 / (2 * (1 + 0.3)),
-             'x_curvature': 12.4, 'y_curvature': 0},
-        'tube_2':
-            {'length': 210.0e-3, 'length_curved': 31e-3, 'diameter_inner': 0.4e-3, 'diameter_outer': 0.5e-3,
-             'stiffness': 50e+10, 'torsional_stiffness': 50.0e+10 / (2 * (1 + 0.3)),
-             'x_curvature': 28.0, 'y_curvature': 0},
-    }
+    import ctr_reach_envs
 
-    goal_tolerance_parameters = {
-        'final_tol': 0.001, 'initial_tol': 0.020, 'function_steps': 200000, 'function_type': 'constant'
-    }
+    spec = gym.spec('CTR-Reach-v0')
+    kwargs = dict()
+    env = spec.make(**kwargs)
 
-    # TODO: Complete noise parameters
-    noise_parameters = {}
-
-    initial_joints = np.array([0., 0., 0., 0., 0., 0.])
-    max_extension_action = 0.001
-    max_rotation_action = np.deg2rad(5.0)
-    steps_per_episode = 150
-    n_substeps = 10
-
-    env = CtrReachEnv(ctr_parameters, goal_tolerance_parameters, noise_parameters, initial_joints, max_extension_action,
-                      max_rotation_action, steps_per_episode, n_substeps)
     env.reset()
-    action = env.action_space.sample()
-    env.step(action)
-    env.render('live')
+    for _ in range(150):
+        action = env.action_space.sample()
+        env.step(action)
+        env.render()
