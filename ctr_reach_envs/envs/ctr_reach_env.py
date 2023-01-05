@@ -1,4 +1,4 @@
-import gymnasium as gym
+import gym
 from ctr_utils.obs_utils import *
 from ctr_utils.render_utils import Rendering
 from ctr_utils.goal_tolerance import GoalTolerance
@@ -80,8 +80,8 @@ class CtrReachEnv(gym.Env):
 
     def compute_reward(self, achieved_goal, desired_goal, info):
         dist = self.compute_distance(achieved_goal, desired_goal)
-        if info['reward_type'] == 'dense':
-            reward = -1.0 * dist
+        if self.reward_type == 'dense':
+            reward = -1.0 - 1.0 * dist
         else:
             reward = -1.0 * (dist > self.goal_tolerance.current_tol)
         return reward

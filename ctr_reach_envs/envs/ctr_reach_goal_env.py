@@ -1,6 +1,6 @@
-import gymnasium as gym
-from gymnasium_robotics import GoalEnv
-from ctr_reach_env import CtrReachEnv
+#import gymnasium as gym
+import gym
+from ctr_reach_envs.envs.ctr_reach_env import CtrReachEnv
 from ctr_utils.obs_utils import *
 
 
@@ -8,7 +8,7 @@ from ctr_utils.obs_utils import *
 # required dictionary style observation.
 
 
-class CtrReachGoalEnv(GoalEnv):
+class CtrReachGoalEnv(gym.Env):
     metadata = {"render_modes": ["human"], "render_fps": 4}
     def __init__(self, ctr_parameters, goal_parameters, reward_type, joint_representation, noise_parameters,
                  initial_joints, max_extension_action, max_rotation_action, steps_per_episode, n_substeps,
