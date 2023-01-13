@@ -30,8 +30,8 @@ register(
             'final_tol': 0.001, 'initial_tol': 0.020, 'function_steps': 200000, 'function_type': 'constant'
         },
         'noise_parameters': {},
-        'reward_type': 'dense',
-        'joint_representation': 'proprioceptive',
+        'reward_type': 'sparse',
+        'joint_representation': 'egocentric',
         'initial_joints': np.array([0., 0., 0., 0., 0., 0.]),
         'max_extension_action': 0.001,
         'max_rotation_action': np.deg2rad(5.0),

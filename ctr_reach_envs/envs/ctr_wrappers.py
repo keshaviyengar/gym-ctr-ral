@@ -190,13 +190,13 @@ if __name__ == '__main__':
                             'diameter_outer': 0.1e-3 + 0.5e-3 + 1.4e-3, 'stiffness': 50.0e+10,
                             'torsional_stiffness': 30.0e+10, 'x_curvature': 25.0}
     num_discrete = 50
-    num_tubes = 2
+    num_tubes = 3
     if num_tubes == 2:
         ctr_system = two_tube_ctr_systems
     else:
         ctr_system = three_tube_ctr_systems
-    #env = ContinuousParametersWrapper(spec.make(**kwargs), tube_parameters_low, tube_parameters_high, num_discrete, num_tubes)
-    env = DiscreteParametersWrapper(spec.make(**kwargs), ctr_system)
+    env = ContinuousParametersWrapper(spec.make(**kwargs), tube_parameters_low, tube_parameters_high, num_discrete, num_tubes)
+    #env = DiscreteParametersWrapper(spec.make(**kwargs), ctr_system)
 
     check_env(env, warn=True)
 

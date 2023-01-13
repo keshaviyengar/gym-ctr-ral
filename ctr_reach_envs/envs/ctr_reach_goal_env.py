@@ -34,7 +34,7 @@ class CtrReachGoalEnv(gym.Env):
     def step(self, action):
         obs, reward, terminal, truncated, info = self.env.step(action)
         obs_dict = convert_obs_to_dict(obs, info['achieved_goal'], info['desired_goal'])
-        self.compute_reward(obs_dict['achieved_goal'], obs_dict['desired_goal'], {'reward_type': self.env.reward_type})
+        reward = self.compute_reward(obs_dict['achieved_goal'], obs_dict['desired_goal'], {'reward_type': self.env.reward_type})
         return obs_dict, reward, terminal, truncated, info
 
     def compute_reward(self, achieved_goal, desired_goal, info):
@@ -42,7 +42,7 @@ class CtrReachGoalEnv(gym.Env):
         if self.env.reward_type == 'dense':
             reward = -1.0 - 1.0 * dist
         else:
-            reward = -1.0 * (dist > self.env.goal_tolerance.current_tol)
+            reward = 1.0 * (dist > self.env.goal_tolerance.current_tol)
         return reward
 
     def set_ctr_system(self, ctr_system):
