@@ -42,7 +42,7 @@ class CtrReachGoalEnv(gym.Env):
         if self.env.reward_type == 'dense':
             reward = -1.0 - 1.0 * dist
         else:
-            reward = 1.0 * (dist > self.env.goal_tolerance.current_tol)
+            reward = -1.0 * (dist > self.env.goal_tolerance.current_tol)
         return reward
 
     def set_ctr_system(self, ctr_system):
