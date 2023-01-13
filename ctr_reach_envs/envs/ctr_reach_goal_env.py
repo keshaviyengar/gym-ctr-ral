@@ -38,7 +38,18 @@ class CtrReachGoalEnv(gym.Env):
         return obs_dict, reward, terminal, truncated, info
 
     def compute_reward(self, achieved_goal, desired_goal, info):
-        return self.env.compute_reward(achieved_goal, desired_goal, info)
+        dist = self.env.compute_distance(achieved_goal, desired_goal)
+        if self.env.reward_type == 'dense':
+            reward = -1.0 - 1.0 * dist
+        else:
+            reward = -1.0 * (dist > self.env.goal_tolerance.current_tol)
+        return reward
+
+    def set_ctr_system(self, ctr_system):
+        self.env.set_ctr_system(ctr_system)
+
+    def get_ctr_system(self):
+        return self.env.get_ctr_system()
 
     def render(self):
         self.env.render()
