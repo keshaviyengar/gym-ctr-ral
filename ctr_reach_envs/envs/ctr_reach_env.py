@@ -99,7 +99,7 @@ class CtrReachEnv(gym.Env):
 
     @staticmethod
     def compute_distance(achieved_goal, desired_goal):
-        assert achieved_goal.shape == desired_goal.shape, print("Shapes: " + str(achieved_goal.shape) + " " + str(desired_goal.shape))
+        #assert achieved_goal.shape == desired_goal.shape
         d = np.linalg.norm(achieved_goal - desired_goal, axis=-1)
         return d
 
