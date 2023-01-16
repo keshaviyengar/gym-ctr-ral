@@ -195,8 +195,8 @@ if __name__ == '__main__':
         ctr_system = two_tube_ctr_systems
     else:
         ctr_system = three_tube_ctr_systems
-    env = ContinuousParametersWrapper(spec.make(**kwargs), tube_parameters_low, tube_parameters_high, num_discrete, num_tubes)
-    #env = DiscreteParametersWrapper(spec.make(**kwargs), ctr_system)
+    #env = ContinuousParametersWrapper(spec.make(**kwargs), tube_parameters_low, tube_parameters_high, num_discrete, num_tubes)
+    env = DiscreteParametersWrapper(spec.make(**kwargs), ctr_system)
 
     check_env(env, warn=True)
 

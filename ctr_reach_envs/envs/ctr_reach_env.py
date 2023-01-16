@@ -95,7 +95,7 @@ class CtrReachEnv(gym.Env):
 
     @staticmethod
     def compute_distance(achieved_goal, desired_goal):
-        assert achieved_goal.shape == desired_goal.shape
+        assert achieved_goal.shape == desired_goal.shape, print("Shapes: " + str(achieved_goal.shape) + " " + str(desired_goal.shape))
         d = np.linalg.norm(achieved_goal - desired_goal, axis=-1)
         return d
 
@@ -114,17 +114,29 @@ class CtrReachEnv(gym.Env):
             self.visualization.close()
             self.visualization = None
 
+def test_subproc_vec_env():
+    from stable_baselines3.common.vec_env.subproc_vec_env import SubprocVecEnv
+    from stable_baselines3.common.vec_env.dummy_vec_env import DummyVecEnv
+    from stable_baselines3.common.env_util import make_vec_env
+    spec = gym.spec('CTR-Reach-v0')
+    kwargs = dict()
+    def make_env():
+        env = spec.make(**kwargs)
+        return env
+    return make_vec_env(make_env, n_envs=4, vec_env_cls=SubprocVecEnv)
+
+def regular_env():
+    spec = gym.spec('CTR-Reach-v0')
+    kwargs = dict()
+    return spec.make(**kwargs)
 
 if __name__ == '__main__':
     import ctr_reach_envs
-
-    spec = gym.spec('CTR-Reach-v0')
-    kwargs = dict()
-    env = spec.make(**kwargs)
-
+    #env = regular_env()
+    env = test_subproc_vec_env()
     for _ in range(10):
         env.reset()
         for _ in range(10):
-            action = env.action_space.sample()
+            action = [env.action_space.sample() for _ in range(env.num_envs)]
             env.step(action)
             env.render()
