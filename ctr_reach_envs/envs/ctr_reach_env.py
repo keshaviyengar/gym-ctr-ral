@@ -51,6 +51,8 @@ class CtrReachEnv(gym.Env):
         self.render_mode = render_mode
         self.visualization = None
 
+        self.timestep = 0
+
     def set_ctr_system(self, ctr_system):
         self.ctr_parameters = ctr_system
         if self.num_tubes == 2:
@@ -79,6 +81,8 @@ class CtrReachEnv(gym.Env):
     def step(self, action):
         assert not np.all(np.isnan(action))
         np.clip(action, self.action_space.low, self.action_space.high)
+        self.timestep += 1
+        self.goal_tolerance.update(self.timestep)
         assert self.action_space.contains(action)
         for i in range(self.n_substeps):
             self.joints = apply_action(action, self.max_extension_action, self.max_rotation_action, self.joints,
@@ -90,7 +94,7 @@ class CtrReachEnv(gym.Env):
         obs = get_obs(self.joints, self.joint_representation,
                       self.desired_goal, achieved_goal, self.goal_tolerance.current_tol, self.tolerance_min_max,
                       self.tube_length)
-        info = {'achieved_goal': achieved_goal, 'desired_goal': self.desired_goal}
+        info = {'achieved_goal': achieved_goal, 'desired_goal': self.desired_goal, 'is_success': done}
         return obs, reward, done, False, info
 
     @staticmethod
