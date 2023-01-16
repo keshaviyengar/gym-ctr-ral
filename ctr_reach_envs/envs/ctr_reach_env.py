@@ -74,8 +74,8 @@ class CtrReachEnv(gym.Env):
         # TimeLimit wrapper to ensure end of episode is handled correctly
         self.desired_goal = self.kinematics.forward_kinematics(flip_joints(sample_joints(self.tube_length)))
         self.achieved_goal = self.kinematics.forward_kinematics(flip_joints(self.joints))
-        obs = get_obs(self.joints, self.joint_representation, self.desired_goal, self.achieved_goal,
-                      self.goal_tolerance.current_tol, self.tolerance_min_max, self.tube_length)
+        obs = get_obs(self.joints, self.joint_representation, self.desired_goal, self.achieved_goal, self.goal_tolerance,
+                      self.tube_length)
         return obs, {'achieved_goal': self.achieved_goal, 'desired_goal': self.desired_goal}
 
     def step(self, action):
@@ -92,9 +92,9 @@ class CtrReachEnv(gym.Env):
         reward = -1.0 - dist
         done = bool(np.linalg.norm(achieved_goal - self.desired_goal, axis=-1) < self.goal_tolerance.current_tol)
         obs = get_obs(self.joints, self.joint_representation,
-                      self.desired_goal, achieved_goal, self.goal_tolerance.current_tol, self.tolerance_min_max,
-                      self.tube_length)
-        info = {'achieved_goal': achieved_goal, 'desired_goal': self.desired_goal, 'is_success': done}
+                      self.desired_goal, achieved_goal, self.goal_tolerance, self.tube_length)
+        info = {'achieved_goal': achieved_goal, 'desired_goal': self.desired_goal, 'is_success': done,
+                'goal_tolerance': self.goal_tolerance.current_tol, 'error': dist * 1000}
         return obs, reward, done, False, info
 
     @staticmethod
