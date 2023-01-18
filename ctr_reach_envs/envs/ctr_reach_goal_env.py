@@ -11,10 +11,10 @@ from ctr_utils.obs_utils import *
 class CtrReachGoalEnv(gym.Env):
     metadata = {"render_modes": ["human"], "render_fps": 4}
     def __init__(self, ctr_parameters, goal_parameters, reward_type, joint_representation, noise_parameters,
-                 initial_joints, max_extension_action, max_rotation_action, steps_per_episode, n_substeps,
+                 initial_joints, resample_joints, max_extension_action, max_rotation_action, steps_per_episode, n_substeps,
                  render_mode=None):
         self.env = CtrReachEnv(ctr_parameters, goal_parameters, reward_type, joint_representation, noise_parameters,
-                               initial_joints, max_extension_action, max_rotation_action, steps_per_episode, n_substeps,
+                               initial_joints, resample_joints, max_extension_action, max_rotation_action, steps_per_episode, n_substeps,
                                render_mode)
         self.observation_space = gym.spaces.Dict(dict(
             desired_goal=gym.spaces.Box(low=-np.ones(3), high=np.ones(3), dtype=float),

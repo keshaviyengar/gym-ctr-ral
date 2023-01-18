@@ -61,7 +61,7 @@ register(
                  'x_curvature': 4.37, 'y_curvature': 0}
         },
         'goal_parameters': {
-            'final_tol': 0.001, 'initial_tol': 0.020, 'function_steps': 200000, 'function_type': 'decay'
+            'final_tol': 0.001, 'initial_tol': 0.020, 'function_steps': 500000, 'function_type': 'decay'
         },
         'noise_parameters': {},
         'reward_type': 'sparse',
