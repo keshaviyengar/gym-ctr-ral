@@ -51,6 +51,12 @@ class CtrReachGoalEnv(gym.Env):
     def get_ctr_system(self):
         return self.env.get_ctr_system()
 
+    def update_goal_tolerance(self, num_timesteps):
+        self.env.update_goal_tolerance(num_timesteps)
+
+    def get_goal_tolerance(self):
+        return self.env.get_goal_tolerance()
+
     def render(self):
         self.env.render()
 

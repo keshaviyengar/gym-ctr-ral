@@ -51,8 +51,6 @@ class CtrReachEnv(gym.Env):
         self.render_mode = render_mode
         self.visualization = None
 
-        self.timestep = 0
-
     def set_ctr_system(self, ctr_system):
         self.ctr_parameters = ctr_system
         if self.num_tubes == 2:
@@ -65,6 +63,12 @@ class CtrReachEnv(gym.Env):
 
     def get_ctr_system(self):
         return self.ctr_parameters
+
+    def update_goal_tolerance(self, num_timesteps):
+        self.goal_tolerance.update(num_timesteps)
+
+    def get_goal_tolerance(self):
+        return self.goal_tolerance.current_tol
 
     def seed(self, seed=None):
         if seed is not None:
@@ -81,8 +85,6 @@ class CtrReachEnv(gym.Env):
     def step(self, action):
         assert not np.all(np.isnan(action))
         np.clip(action, self.action_space.low, self.action_space.high)
-        self.timestep += 1
-        self.goal_tolerance.update(self.timestep)
         assert self.action_space.contains(action)
         for i in range(self.n_substeps):
             self.joints = apply_action(action, self.max_extension_action, self.max_rotation_action, self.joints,
@@ -108,7 +110,7 @@ class CtrReachEnv(gym.Env):
             if self.visualization is None:
                 self.visualization = Rendering()
             if self.num_tubes == 2:
-                self.visualization.render(self.achieved_goal, self.desired_goal, self.kinematics.r, self.kinematics.r2)
+                self.visualization.render(self.achieved_goal, self.desired_goal, self.kinematics.r1, self.kinematics.r2)
             else:
                 self.visualization.render(self.achieved_goal, self.desired_goal, self.kinematics.r1, self.kinematics.r2,
                                           self.kinematics.r3)
@@ -118,7 +120,7 @@ class CtrReachEnv(gym.Env):
             self.visualization.close()
             self.visualization = None
 
-def test_subproc_vec_env():
+def test_subproc_vec_env(num_envs):
     from stable_baselines3.common.vec_env.subproc_vec_env import SubprocVecEnv
     from stable_baselines3.common.vec_env.dummy_vec_env import DummyVecEnv
     from stable_baselines3.common.env_util import make_vec_env
@@ -127,7 +129,7 @@ def test_subproc_vec_env():
     def make_env():
         env = spec.make(**kwargs)
         return env
-    return make_vec_env(make_env, n_envs=4, vec_env_cls=SubprocVecEnv)
+    return make_vec_env(make_env, n_envs=num_envs, vec_env_cls=SubprocVecEnv)
 
 def regular_env():
     spec = gym.spec('CTR-Reach-v0')
@@ -136,11 +138,15 @@ def regular_env():
 
 if __name__ == '__main__':
     import ctr_reach_envs
-    #env = regular_env()
-    env = test_subproc_vec_env()
+    num_envs = 1
+    env = regular_env()
+    #env = test_subproc_vec_env(num_envs)
     for _ in range(10):
         env.reset()
         for _ in range(10):
-            action = [env.action_space.sample() for _ in range(env.num_envs)]
+            if num_envs == 1:
+                action = env.action_space.sample()
+            else:
+                action = [env.action_space.sample() for _ in range(env.num_envs)]
             env.step(action)
             env.render()
