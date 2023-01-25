@@ -36,11 +36,11 @@ register(
         'resample_joints': True,
         'max_extension_action': 0.001,
         'max_rotation_action': np.deg2rad(5.0),
-        'steps_per_episode': 150,
+        'steps_per_episode': 200,
         'n_substeps': 10,
         'render_mode': 'human'
     },
-    max_episode_steps=150
+    max_episode_steps=200
 )
 
 register(
@@ -67,7 +67,7 @@ register(
         'reward_type': 'sparse',
         'joint_representation': 'proprioceptive',
         'initial_joints': np.array([0., 0., 0., 0., 0., 0.]),
-        'resample_joints': False,
+        'resample_joints': True,
         'max_extension_action': 0.001,
         'max_rotation_action': np.deg2rad(5.0),
         'steps_per_episode': 200,
