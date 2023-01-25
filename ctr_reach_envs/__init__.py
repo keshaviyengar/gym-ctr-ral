@@ -31,7 +31,7 @@ register(
         },
         'noise_parameters': {},
         'reward_type': 'sparse',
-        'joint_representation': 'egocentric',
+        'joint_representation': 'proprioceptive',
         'initial_joints': np.array([0., 0., 0., 0., 0., 0.]),
         'resample_joints': True,
         'max_extension_action': 0.001,
@@ -61,18 +61,18 @@ register(
                  'x_curvature': 4.37, 'y_curvature': 0}
         },
         'goal_parameters': {
-            'final_tol': 0.001, 'initial_tol': 0.020, 'function_steps': 500000, 'function_type': 'decay'
+            'final_tol': 0.001, 'initial_tol': 0.020, 'function_steps': 500000, 'function_type': 'constant'
         },
         'noise_parameters': {},
         'reward_type': 'sparse',
-        'joint_representation': 'egocentric',
+        'joint_representation': 'proprioceptive',
         'initial_joints': np.array([0., 0., 0., 0., 0., 0.]),
-        'resample_joints': True,
+        'resample_joints': False,
         'max_extension_action': 0.001,
         'max_rotation_action': np.deg2rad(5.0),
-        'steps_per_episode': 150,
+        'steps_per_episode': 200,
         'n_substeps': 10,
         'render_mode': 'human'
     },
-    max_episode_steps=150
+    max_episode_steps=200
 )

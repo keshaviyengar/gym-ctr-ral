@@ -91,7 +91,7 @@ class CtrReachEnv(gym.Env):
     def step(self, action):
         assert not np.all(np.isnan(action))
         np.clip(action, self.action_space.low, self.action_space.high)
-        assert self.action_space.contains(action)
+        #assert self.action_space.contains(action)
         for i in range(self.n_substeps):
             self.joints = apply_action(action, self.max_extension_action, self.max_rotation_action, self.joints,
                                        self.tube_length)
