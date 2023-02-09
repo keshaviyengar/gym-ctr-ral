@@ -26,7 +26,7 @@ register(
             'final_tol': 0.001, 'initial_tol': 0.020, 'function_steps': 500000, 'function_type': 'constant'
         },
         'noise_parameters': {},
-        'reward_type': 'sparse',
+        'reward_type': 'dense',
         'joint_representation': 'proprioceptive',
         'initial_joints': np.array([0., 0., 0., 0., 0., 0.]),
         'resample_joints': True,
