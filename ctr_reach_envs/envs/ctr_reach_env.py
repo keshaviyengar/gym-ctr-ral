@@ -10,8 +10,8 @@ class CtrReachEnv(gym.Env):
     metadata = {"render_modes": ["human"], "render_fps": 4}
 
     def __init__(self, ctr_parameters, goal_parameters, reward_type, joint_representation, noise_parameters,
-                 initial_joints, resample_joints, max_extension_action, max_rotation_action, steps_per_episode,
-                 n_substeps, render_mode):
+                 initial_joints, resample_joints, max_extension_action, home_offset, max_retraction, max_rotation,
+                 max_rotation_action, steps_per_episode, n_substeps, render_mode):
         # Tubes ordered outermost to innermost in environment but innermost to outermost in kinematics
         self.ctr_parameters = ctr_parameters
         self.num_tubes = len(self.ctr_parameters)
@@ -27,12 +27,15 @@ class CtrReachEnv(gym.Env):
         self.joint_representation = joint_representation
         self.noise_parameters = noise_parameters
         if np.all(initial_joints == 0):
-            self.joints = np.zeros(self.num_tubes * 2)
+            self.joints = np.concatenate((-max_retraction, np.zeros(3)))
         else:
             self.joints = initial_joints
         self.resample_joints = resample_joints
         self.max_extension_action = max_extension_action
         self.max_rotation_action = max_rotation_action
+        self.home_offset = home_offset
+        self.max_retraction = max_retraction
+        self.max_rotation = max_rotation
         self.steps_per_episode = steps_per_episode
         self.n_substeps = n_substeps
         self.action_space = gym.spaces.Box(low=-1.0 * np.ones(self.num_tubes * 2),
@@ -79,12 +82,16 @@ class CtrReachEnv(gym.Env):
 
     def reset(self, seed=None, options=None):
         # TimeLimit wrapper to ensure end of episode is handled correctly
-        self.desired_goal = self.kinematics.forward_kinematics(flip_joints(sample_joints(self.tube_length)))
+        # Sample from max_retraction and add home offset
+        self.joints = sample_joints(self.tube_length, self.max_retraction, self.home_offset, self.max_rotation)
+        self.desired_goal = self.kinematics.forward_kinematics(flip_joints(sample_joints(self.tube_length,
+                                                                                         self.max_retraction,
+                                                                                         self.home_offset,
+                                                                                         self.max_rotation)))
         if self.resample_joints:
-            self.joints = sample_joints(self.tube_length)
+            self.joints = sample_joints(self.tube_length, self.max_retraction, self.home_offset, self.max_rotation)
         self.achieved_goal = self.kinematics.forward_kinematics(flip_joints(self.joints))
-        obs = get_obs(self.joints, self.joint_representation, self.desired_goal, self.achieved_goal,
-                      self.goal_tolerance,
+        obs = get_obs(self.joints, self.joint_representation, self.desired_goal, self.achieved_goal,self.goal_tolerance,
                       self.tube_length)
         return obs, {'achieved_goal': self.achieved_goal, 'desired_goal': self.desired_goal}
 
