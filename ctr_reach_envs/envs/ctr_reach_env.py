@@ -104,7 +104,10 @@ class CtrReachEnv(gym.Env):
                                        self.tube_length)
         achieved_goal = self.kinematics.forward_kinematics(flip_joints(self.joints))
         dist = self.compute_distance(achieved_goal, self.desired_goal)
-        reward = -1.0 - dist
+        if dist > self.goal_tolerance.current_tol:
+            reward = -dist
+        else:
+            reward = 1.0
         done = bool(np.linalg.norm(achieved_goal - self.desired_goal, axis=-1) < self.goal_tolerance.current_tol)
         obs = get_obs(self.joints, self.joint_representation,
                       self.desired_goal, achieved_goal, self.goal_tolerance, self.tube_length)
