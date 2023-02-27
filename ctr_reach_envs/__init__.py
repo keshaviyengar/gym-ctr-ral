@@ -28,7 +28,7 @@ register(
         'noise_parameters': {},
         'reward_type': 'dense',
         'joint_representation': 'proprioceptive',
-        'initial_joints': np.array([0., 0., 0., 0., 0., 0.]),
+        'initial_joints': np.array([-50.75e-3, -119.69e-3, -235.96e-3 - 2.0 * 96.41e-3]),
         'resample_joints': True,
         'home_offset': np.array([50.75e-3, 119.69e-3, 235.96e-3 + 2.0 * 96.41e-3]),
         'max_retraction': np.array([22.0e-3, 50.0e-3, 97.0e-3]),

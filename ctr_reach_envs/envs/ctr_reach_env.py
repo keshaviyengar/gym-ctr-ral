@@ -27,7 +27,7 @@ class CtrReachEnv(gym.Env):
         self.joint_representation = joint_representation
         self.noise_parameters = noise_parameters
         if np.all(initial_joints == 0):
-            self.joints = np.concatenate((-max_retraction, np.zeros(3)))
+            self.joints = np.concatenate((-home_offset, np.zeros(3)))
         else:
             self.joints = initial_joints
         self.resample_joints = resample_joints
