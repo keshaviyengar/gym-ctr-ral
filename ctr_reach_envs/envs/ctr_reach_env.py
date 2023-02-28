@@ -11,7 +11,7 @@ class CtrReachEnv(gym.Env):
 
     def __init__(self, ctr_parameters, goal_parameters, reward_type, joint_representation, noise_parameters,
                  initial_joints, resample_joints, max_extension_action, home_offset, max_retraction, max_rotation,
-                 max_rotation_action, steps_per_episode, n_substeps, render_mode):
+                 max_rotation_action, steps_per_episode, n_substeps, render_mode, domain_rand=0):
         # Tubes ordered outermost to innermost in environment but innermost to outermost in kinematics
         self.ctr_parameters = ctr_parameters
         self.num_tubes = len(self.ctr_parameters)
@@ -26,10 +26,7 @@ class CtrReachEnv(gym.Env):
         assert joint_representation in ['proprioceptive', 'egocentric']
         self.joint_representation = joint_representation
         self.noise_parameters = noise_parameters
-        if np.all(initial_joints == 0):
-            self.joints = np.concatenate((-home_offset, np.zeros(3)))
-        else:
-            self.joints = initial_joints
+        self.joints = initial_joints
         self.resample_joints = resample_joints
         self.max_extension_action = max_extension_action
         self.max_rotation_action = max_rotation_action
@@ -50,6 +47,7 @@ class CtrReachEnv(gym.Env):
                                             goal_parameters['function_steps'], goal_parameters['function_type'])
         self.tolerance_min_max = np.array([self.goal_tolerance.final_tol, self.goal_tolerance.init_tol])
 
+        self.domain_rand = domain_rand
         if self.num_tubes == 2:
             self.kinematics = TwoTubeCTRKinematics(ctr_parameters)
         else:
@@ -83,6 +81,7 @@ class CtrReachEnv(gym.Env):
     def reset(self, seed=None, options=None):
         # TimeLimit wrapper to ensure end of episode is handled correctly
         # Sample from max_retraction and add home offset
+        self.kinematics.randomize_parameters(self.domain_rand)
         self.joints = sample_joints(self.tube_length, self.max_retraction, self.home_offset, self.max_rotation)
         self.desired_goal = self.kinematics.forward_kinematics(flip_joints(sample_joints(self.tube_length,
                                                                                          self.max_retraction,
@@ -92,7 +91,7 @@ class CtrReachEnv(gym.Env):
             self.joints = sample_joints(self.tube_length, self.max_retraction, self.home_offset, self.max_rotation)
         self.achieved_goal = self.kinematics.forward_kinematics(flip_joints(self.joints))
         obs = get_obs(self.joints, self.joint_representation, self.desired_goal, self.achieved_goal,self.goal_tolerance,
-                      self.tube_length)
+                      self.tube_length, self.noise_parameters)
         return obs, {'achieved_goal': self.achieved_goal, 'desired_goal': self.desired_goal}
 
     def step(self, action):
@@ -110,7 +109,7 @@ class CtrReachEnv(gym.Env):
             reward = 1.0
         done = bool(np.linalg.norm(achieved_goal - self.desired_goal, axis=-1) < self.goal_tolerance.current_tol)
         obs = get_obs(self.joints, self.joint_representation,
-                      self.desired_goal, achieved_goal, self.goal_tolerance, self.tube_length)
+                      self.desired_goal, achieved_goal, self.goal_tolerance, self.tube_length, self.noise_parameters)
         info = {'achieved_goal': achieved_goal, 'desired_goal': self.desired_goal, 'is_success': done,
                 'goal_tolerance': self.goal_tolerance.current_tol, 'error': dist * 1000}
         return obs, reward, done, False, info

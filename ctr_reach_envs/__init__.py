@@ -25,10 +25,14 @@ register(
         'goal_parameters': {
             'final_tol': 0.001, 'initial_tol': 0.020, 'function_steps': 500000, 'function_type': 'constant'
         },
-        'noise_parameters': {},
+        'noise_parameters': {
+            # 0.001 is the gear ratio
+            # 0.001 is also the tracking std deviation for now for testing.
+            'rotation_std': np.deg2rad(0), 'extension_std': 0.001 * np.deg2rad(0), 'tracking_std': 0.0
+        },
         'reward_type': 'dense',
         'joint_representation': 'proprioceptive',
-        'initial_joints': np.array([-50.75e-3, -119.69e-3, -235.96e-3 - 2.0 * 96.41e-3]),
+        'initial_joints': np.array([-50.75e-3, -119.69e-3, -235.96e-3 - 2.0 * 96.41e-3, 0.0, 0.0, 0.0]),
         'resample_joints': True,
         'home_offset': np.array([50.75e-3, 119.69e-3, 235.96e-3 + 2.0 * 96.41e-3]),
         'max_retraction': np.array([22.0e-3, 50.0e-3, 97.0e-3]),
@@ -37,7 +41,8 @@ register(
         'max_rotation_action': np.deg2rad(5.0),
         'steps_per_episode': 200,
         'n_substeps': 10,
-        'render_mode': 'human'
+        'render_mode': 'human',
+        'domain_rand': 0.0
     },
     max_episode_steps=200
 )
@@ -49,10 +54,14 @@ register(
         'goal_parameters': {
             'final_tol': 0.001, 'initial_tol': 0.020, 'function_steps': 500000, 'function_type': 'constant'
         },
-        'noise_parameters': {},
+        'noise_parameters': {
+            # 0.001 is the gear ratio
+            # 0.001 is also the tracking std deviation for now for testing.
+            'rotation_std': np.deg2rad(0), 'extension_std': 0.001 * np.deg2rad(0), 'tracking_std': 0.0
+        },
         'reward_type': 'sparse',
         'joint_representation': 'proprioceptive',
-        'initial_joints': np.array([0., 0., 0., 0., 0., 0.]),
+        'initial_joints': np.array([-50.75e-3, -119.69e-3, -235.96e-3 - 2.0 * 96.41e-3, 0.0, 0.0, 0.0]),
         'home_offset': np.array([50.75e-3, 119.69e-3, 235.96e-3 + 2.0 * 96.41e-3]),
         'max_retraction': np.array([22.0e-3, 50.0e-3, 97.0e-3]),
         'max_rotation': np.pi / 3,
@@ -61,7 +70,8 @@ register(
         'max_rotation_action': np.deg2rad(5.0),
         'steps_per_episode': 200,
         'n_substeps': 10,
-        'render_mode': 'human'
+        'render_mode': 'human',
+        'domain_rand': 0.0
     },
     max_episode_steps=200
 )
