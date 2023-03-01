@@ -82,7 +82,6 @@ class CtrReachEnv(gym.Env):
         # TimeLimit wrapper to ensure end of episode is handled correctly
         # Sample from max_retraction and add home offset
         self.kinematics.randomize_parameters(self.domain_rand)
-        self.joints = sample_joints(self.tube_length, self.max_retraction, self.home_offset, self.max_rotation)
         self.desired_goal = self.kinematics.forward_kinematics(flip_joints(sample_joints(self.tube_length,
                                                                                          self.max_retraction,
                                                                                          self.home_offset,
