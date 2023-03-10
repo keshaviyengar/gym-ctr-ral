@@ -1,7 +1,7 @@
 from pynput.keyboard import Key, Listener
 import gym
 import numpy as np
-from ctr_reach_env import CtrReachEnv
+import ctr_reach_envs
 
 
 class KeyboardControl(object):
@@ -65,47 +65,15 @@ class KeyboardControl(object):
             self.action[:3] = self.extension_actions
             self.action[3:] = self.rotation_actions
             # print('action: ', self.action)
-            observation, reward, done, info = self.env.step(self.action)
+            observation, reward, done, truncated, info = self.env.step(self.action)
             self.extension_actions = np.zeros(3)
             self.rotation_actions = np.zeros(3)
             self.action = np.zeros_like(self.env.action_space.low)
-            self.env.render('live')
+            self.env.render()
         self.env.close()
 
 
 if __name__ == '__main__':
-    ctr_parameters = {
-        'inner':
-            {'length': 210.0e-3, 'length_curved': 31e-3, 'diameter_inner': 0.4e-3, 'diameter_outer': 0.5e-3,
-             'stiffness': 50e+10, 'torsional_stiffness': 50.0e+10 / (2 * (1 + 0.3)),
-             'x_curvature': 28.0, 'y_curvature': 0},
-        'middle':
-            {'length': 165.0e-3, 'length_curved': 100e-3, 'diameter_inner': 0.7e-3, 'diameter_outer': 0.9e-3,
-             'stiffness': 50e+10, 'torsional_stiffness': 50.0e+10 / (2 * (1 + 0.3)),
-             'x_curvature': 12.4, 'y_curvature': 0},
-        'outer':
-            {'length': 110.0e-3, 'length_curved': 100e-3, 'diameter_inner': 1.2e-3, 'diameter_outer': 1.5e-3,
-             'stiffness': 50e+10, 'torsional_stiffness': 50.0e+10 / (2 * (1 + 0.3)),
-             'x_curvature': 4.37, 'y_curvature': 0},
-    }
-
-    goal_tolerance_parameters = {
-        'final_tol': 0.001, 'initial_tol': 0.020, 'function_steps': 200000, 'function_type': 'constant'
-    }
-
-    # TODO: Complete noise parameters
-    noise_parameters = {}
-    reward_type = 'dense'
-    joint_representation = 'proprioceptive'
-
-    initial_joints = np.array([0., 0., 0., 0., 0., 0.])
-    max_extension_action = 0.001
-    max_rotation_action = np.deg2rad(5.0)
-    steps_per_episode = 150
-    n_substeps = 10
-
-    env = CtrReachEnv(ctr_parameters, goal_tolerance_parameters, reward_type, joint_representation,
-                      noise_parameters, initial_joints, max_extension_action, max_rotation_action, steps_per_episode,
-                      n_substeps)
+    env = gym.make('CTR-Reach-v0')
     keyboard_agent = KeyboardControl(env)
     keyboard_agent.run()
