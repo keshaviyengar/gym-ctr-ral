@@ -110,7 +110,7 @@ class CtrReachEnv(gym.Env):
         obs = get_obs(self.joints, self.joint_representation,
                       self.desired_goal, achieved_goal, self.goal_tolerance, self.tube_length, self.noise_parameters)
         info = {'achieved_goal': achieved_goal, 'desired_goal': self.desired_goal, 'is_success': done,
-                'goal_tolerance': self.goal_tolerance.current_tol, 'error': dist * 1000}
+                'goal_tolerance': self.goal_tolerance.current_tol, 'error': dist * 1000, 'q_achieved': self.joints}
         return obs, reward, done, False, info
 
     @staticmethod
