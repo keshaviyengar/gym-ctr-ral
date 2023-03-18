@@ -99,7 +99,7 @@ class CtrReachEnv(gym.Env):
         #assert self.action_space.contains(action)
         for i in range(self.n_substeps):
             self.joints = apply_action(action, self.max_extension_action, self.max_rotation_action, self.joints,
-                                       self.tube_length)
+                                       self.tube_length, self.max_retraction, self.home_offset)
         achieved_goal = self.kinematics.forward_kinematics(flip_joints(self.joints))
         dist = self.compute_distance(achieved_goal, self.desired_goal)
         if dist > self.goal_tolerance.current_tol:
@@ -151,19 +151,23 @@ def test_subproc_vec_env(num_envs):
 
 def regular_env():
     spec = gym.spec('CTR-Reach-v0')
-    kwargs = dict()
+    kwargs = {'domain_rand': 0.5, 'initial_joints': np.array([-50.75e-3, -119.69e-3, -235.96e-3 - 2.0 * 96.41e-3, 0.0, 0.0, 0.0]),
+              'resample_joints': False}
     return spec.make(**kwargs)
 
 
 if __name__ == '__main__':
     import ctr_reach_envs
+    import time
 
     num_envs = 1
     env = regular_env()
     # env = test_subproc_vec_env(num_envs)
     for _ in range(10):
         env.reset()
-        for _ in range(10):
+        env.render()
+        time.sleep(3.0)
+        for _ in range(0):
             if num_envs == 1:
                 action = env.action_space.sample()
             else:

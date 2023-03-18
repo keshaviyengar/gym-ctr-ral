@@ -2,6 +2,7 @@ from pynput.keyboard import Key, Listener
 import gym
 import numpy as np
 import ctr_reach_envs
+import time
 
 
 class KeyboardControl(object):
@@ -14,6 +15,7 @@ class KeyboardControl(object):
         self.action = np.zeros_like(self.env.action_space.low)
         self.extension_actions = np.zeros(3)
         self.rotation_actions = np.zeros(3)
+        self.reset_prompt = False
 
         self.extension_value = self.env.action_space.high[0] / 2
         self.rotation_value = self.env.action_space.high[-1] / 2
@@ -51,6 +53,8 @@ class KeyboardControl(object):
                     self.rotation_actions[2] = self.rotation_value
                 elif key.char == 'l':
                     self.rotation_actions[2] = -self.rotation_value
+            if key.char == 'r':
+                self.reset_prompt = True
         except AttributeError:
             if key == Key.esc:
                 self.exit = True
@@ -62,14 +66,19 @@ class KeyboardControl(object):
     def run(self):
         obs = self.env.reset()
         while not self.exit:
-            self.action[:3] = self.extension_actions
-            self.action[3:] = self.rotation_actions
-            # print('action: ', self.action)
-            observation, reward, done, truncated, info = self.env.step(self.action)
-            self.extension_actions = np.zeros(3)
-            self.rotation_actions = np.zeros(3)
-            self.action = np.zeros_like(self.env.action_space.low)
-            self.env.render()
+            if self.reset_prompt:
+                obs = self.env.reset()
+                self.reset_prompt = False
+            for _ in range(10):
+                self.action[:3] = self.extension_actions
+                self.action[3:] = self.rotation_actions
+                # print('action: ', self.action)
+                observation, reward, done, truncated, info = self.env.step(self.action)
+                self.extension_actions = np.zeros(3)
+                self.rotation_actions = np.zeros(3)
+                self.action = np.zeros_like(self.env.action_space.low)
+                self.env.render()
+
         self.env.close()
 
 
